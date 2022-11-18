@@ -119,12 +119,16 @@ def get_city_routes(city_name):
     city = [x for x in cities if x.get('city_name') == city_name][0]
     city_id = city['city_id']
 
-    with connection:
-        with connection.cursor() as cursor:
-            cursor.execute(GET_ROUTE_TABLE, (city_id,))
-            r = [dict((cursor.description[i][0], value)
-                      for i, value in enumerate(row)) for row in cursor.fetchall()]
-    return {"routes": r}
+    try:
+        with connection:
+            with connection.cursor() as cursor:
+                cursor.execute(GET_ROUTE_TABLE, (city_id,))
+                r = [dict((cursor.description[i][0], value)
+                          for i, value in enumerate(row)) for row in cursor.fetchall()]
+        return {"routes": r}
+
+    except KeyError:
+        return{"message": "City not found"}, 404
 
 
 

@@ -50,6 +50,7 @@ engine = create_engine(url_alchemy)
 connection = psycopg2.connect(url)
 current_cwd = os.getcwd()
 
+
 def update_sql_table(cwd, city_name):
     path_csv = f'{cwd}\\csv_files'
     file = [f for f in os.listdir(path_csv) if f.startswith(city_name)][0]
@@ -99,6 +100,7 @@ def get_dataset(cwd, city_name):
         update_sql_table(cwd, city_name)
 
 
+
 @app.get("/mpk")
 def get_cities():
     with connection:
@@ -131,4 +133,6 @@ def get_city_routes(city_name):
         return{"message": "City not found"}, 404
 
 
-
+#update Wroclaw routes
+cwd = os.getcwd()
+get_dataset(cwd, 'Wroclaw')

@@ -1,0 +1,14 @@
+{
+  "cities": [
+    {
+      "city_id": 1,
+      "city_name": "Wroclaw",
+      "url": "https://www.wroclaw.pl/open-data/dataset/rozkladjazdytransportupublicznegoplik_data/resource/62b3f371-2375-4979-874c-05c6bbb9b09e"
+    },
+        {
+      "city_id": 2,
+      "city_name": "Poznan",
+      "url": "https://www.mpk.poznan.pl/"
+    }
+  ]
+}

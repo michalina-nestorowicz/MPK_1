@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask, request
+from flask import Flask
 import psycopg2
 import pandas as pd
 from sqlalchemy import create_engine
@@ -100,7 +100,6 @@ def get_dataset(cwd, city_name):
         update_sql_table(cwd, city_name)
 
 
-
 @app.get("/mpk")
 def get_cities():
     with connection:
@@ -133,6 +132,6 @@ def get_city_routes(city_name):
         return{"message": "City not found"}, 404
 
 
-#update Wroclaw routes
-cwd = os.getcwd()
-get_dataset(cwd, 'Wroclaw')
+# update Wroclaw routes
+wd = os.getcwd()
+get_dataset(wd, 'Wroclaw')

@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask, request
+from flask import Flask
 import psycopg2
 import pandas as pd
 from sqlalchemy import create_engine
@@ -28,6 +28,21 @@ UPDATE_ROUTE_TABLE = (
         WHERE r.city_id = %s;
     """
 )
+
+DELETE_OLD_RECORDS = (
+   "DELETE FROM routes where city_id = %s"
+)
+
+INSERT_NEW_RECORDS = (
+    """
+    INSERT INTO routes
+    SELECT * FROM temp_table
+    WHERE temp_table.city_id = %s
+    """
+)
+
+
+
 
 GET_ROUTE_TABLE = (
     """
@@ -59,27 +74,26 @@ def update_sql_table(cwd, city_name):
     df = pd.read_csv(os.path.join(path_csv, file), encoding='ansi', sep=';')
     df.to_sql(name='temp_table', con=engine, if_exists='replace', index=False, index_label='route_id')
 
-    with open('cities.json') as f:
-        data = json.load(f)
-        # print(cities)
-    cities = data['cities']
-    city = [x for x in cities if x.get('city_name') == city_name][0]
+    city = dataset_scrapper.read_json(city_name)
     city_id = city['city_id']
 
     with connection:
         with connection.cursor() as cursor:
-            cursor.execute(UPDATE_ROUTE_TABLE, (city_id,))
+            # cursor.execute(UPDATE_ROUTE_TABLE, (city_id,)) # why it doesnt work now?
+            cursor.execute(DELETE_OLD_RECORDS, (city_id,))
+            cursor.execute(INSERT_NEW_RECORDS, (city_id,))
 
 
+# test get_dataset when files are old! some weird error
 def get_dataset(cwd, city_name):
-    # check if .csv file exist and how old are they
+    dataset_scrapper.create_expected_dirs(cwd)
     check = dataset_scrapper.check_csv_age(cwd)
 
     if check == 'file not old':
         update_sql_table(cwd, city_name)
     elif check == 'file old':
         old_deleted = dataset_scrapper.delete_old_zip_file(cwd)
-        dataset_scrapper.delete_txt_files(cwd)
+        dataset_scrapper.delete_txt_files(cwd, city_name)
 
         if old_deleted:
             is_downloaded = dataset_scrapper.dataset_download(cwd, city_name)
@@ -100,39 +114,49 @@ def get_dataset(cwd, city_name):
         update_sql_table(cwd, city_name)
 
 
-
-@app.get("/mpk")
+@app.get("/mpk/")
 def get_cities():
     with connection:
         with connection.cursor() as cursor:
             cursor.execute(GET_ALL_CITIES)
-            r = [dict((cursor.description[i][0], value)
-                      for i, value in enumerate(row)) for row in cursor.fetchall()]
-    return {"cities": r}
+            r = []
+            column = [column[0] for column in cursor.description]
+            for row in cursor.fetchall():
+                r.append(dict(zip(column, row)))
+    return json.dumps(r), 200
 
 
 @app.get("/routes/<string:city_name>")
 def get_city_routes(city_name):
 
-    with open('cities.json') as f:
-        data = json.load(f)
-        # print(cities)
-    cities = data['cities']
-    city = [x for x in cities if x.get('city_name') == city_name][0]
+    city = dataset_scrapper.read_json(city_name)
     city_id = city['city_id']
 
     try:
         with connection:
             with connection.cursor() as cursor:
                 cursor.execute(GET_ROUTE_TABLE, (city_id,))
-                r = [dict((cursor.description[i][0], value)
-                          for i, value in enumerate(row)) for row in cursor.fetchall()]
-        return {"routes": r}
+                # r = [dict((cursor.description[i][0], value)
+                #           for i, value in enumerate(row)) for row in cursor.fetchall()]
+                r = []
+                column = [column[0] for column in cursor.description]
+                for row in cursor.fetchall():
+                    r.append(dict(zip(column, row)))
+                print(json.dumps(r))
+
+        return json.dumps(r), 200
 
     except KeyError:
         return{"message": "City not found"}, 404
 
 
-#update Wroclaw routes
-cwd = os.getcwd()
-get_dataset(cwd, 'Wroclaw')
+@app.get('/')
+def home():
+    return {'message': 'Hello, world!'}
+
+
+# update Wroclaw routes
+
+if __name__ == '__main__':
+    wd = os.getcwd()
+    get_dataset(wd, 'Wroclaw')

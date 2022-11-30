@@ -87,7 +87,6 @@ class TestDataScrapper(fake_filesystem_unittest.TestCase):
         with mock.patch('builtins.print') as mocked_print:
             result = dataset_scrapper.delete_old_zip_file('/home/mpk/', days=0)
 
-            # add if mocked_filed is removed
             mocked_print.assert_called_with('File removed')
             self.assertEqual(result, True)
             self.assertFalse(os.path.exists(archive_name))

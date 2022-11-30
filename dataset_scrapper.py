@@ -150,27 +150,26 @@ def txt_to_csv(cwd, city_name, table_name='routes') -> None:
     filename = 'routes.txt'
 
     if city_name == 'Wroclaw':
-        if table_name == 'routes':
-            filename = 'routes.txt'  # TODO something more clever than this
+        filename = table_name + '.txt'
+
 
     if not os.path.exists(os.path.join(path_unzipped, filename)):
         print(f'File {filename} not found')
         return
 
     city = read_json(city_name)
-    data = pd.read_csv(os.path.join(path_unzipped, filename), encoding='ansi')
+    data = pd.read_csv(os.path.join(path_unzipped, filename), encoding='utf-8')
     data = data.assign(city_id=city['city_id'])
     data = data.assign(date=datetime.now(timezone.utc))
 
-    data_col = ['route_id', 'route_short_name', 'route_desc', 'city_id', 'date']
+    data_col_routes = ['route_id', 'route_short_name', 'route_desc', 'city_id','date']
 
-    for col in data.columns:
-        if col not in data_col:
-            data.drop(col, axis=1, inplace=True)
+    if city_name == 'Wroclaw':
+        if table_name == 'routes':
+            for col in data.columns:
+                if col not in data_col_routes:
+                    data.drop(col, axis=1, inplace=True)
 
     name = city_name + '-' + table_name + '.csv'
-    routes_path = (os.path.join(path_csv, name))
-    data.to_csv(routes_path, encoding='ansi', sep=';', index=False)
-
-
-
+    file_path = (os.path.join(path_csv, name))
+    data.to_csv(file_path, encoding='utf-8', sep=';', index=False)

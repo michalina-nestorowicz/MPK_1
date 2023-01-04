@@ -7,7 +7,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 import json
 
-import dataset_scrapper
+import dataset_scrapper_old_2
 
 
 UPDATE_ROUTE_TABLE = (
@@ -82,7 +82,6 @@ app = Flask(__name__)
 url = os.getenv("DATABASE_URL")
 url_alchemy = os.getenv("SQLALCHEMY_URL")
 engine = create_engine(url_alchemy)
-#connection = psycopg2.connect(url)
 current_cwd = os.getcwd()
 
 
@@ -205,3 +204,4 @@ if __name__ == '__main__':
     wd = os.getcwd()
     get_dataset(wd, 'Wroclaw')
     app.run(debug=True)
+    

@@ -1,12 +1,9 @@
 from unittest import TestCase
-
 import pandas
-
-
 import app
 import json
-import dataset_scrapper
-from test_datascrapper import MockFile, mock_json_load
+import dataset_scrapper_old_2
+from test_datascrapper_old import MockFile, mock_json_load
 from pyfakefs import fake_filesystem_unittest
 import os
 from unittest import mock
@@ -82,7 +79,6 @@ class TestDataScrapper(fake_filesystem_unittest.TestCase):
 
     def mock_create_sql_temp(self, *args, **kwargs):
         return
-
 
     @mock.patch('psycopg2.connect')
     def test_update_sql_table(self, mock_connect):

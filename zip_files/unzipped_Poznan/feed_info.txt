@@ -1,2 +1,2 @@
 ﻿feed_publisher_name,feed_publisher_url,feed_lang,feed_start_date,feed_end_date
-"ZTM Poznań","http://www.ztm.poznan.pl","pl","20221226","20221231"
+"ZTM Poznań","http://www.ztm.poznan.pl","pl","20230107","20230128"

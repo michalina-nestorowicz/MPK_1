@@ -13,8 +13,7 @@ DEFAULT_CONFIG = """[
   {
     "city_id": 1,
     "city_name": "Wroclaw",
-    "url": "https://www.wroclaw.pl/open-data/dataset/rozkladjazdytransportupublicznegoplik_data
-    /resource/62b3f371-2375-4979-874c-05c6bbb9b09e",
+    "url": "https://www.wroclaw.pl/open-data/dataset/rozkladjazdytransportupublicznegoplik_data/resource/62b3f371-2375-4979-874c-05c6bbb9b09e",
     "direct_link": false
   },
   {
@@ -126,6 +125,10 @@ def check_file_age_in_directory(path: str, days: int, file_type: str) -> dict:
     return dict(zip(filelist, result_list))
 
 
+def get_city_name_from_zip_filepath(filepath: str):
+    return filepath.split('\\')[-1].split('.')[0]
+
+
 def delete_old_files(file_dict: dict) -> bool:
     """ Deletes old files
 
@@ -145,9 +148,29 @@ def delete_old_files(file_dict: dict) -> bool:
             try:
                 os.remove(key)
             except OSError as e:
-                print(f"Can't remove file: {e}")
+                print(f"Can't remove old file {key}: {e}")
                 return False
     return True
+
+
+def delete_all_files_in_directory(path: str, file_type: str):
+    filelist = [os.path.join(path, f) for f in os.listdir(path) if f.endswith(file_type)]
+    for file in filelist:
+        try:
+            os.remove(file)
+        except OSError as e:
+            print(f"Can't remove file {file}: {e}")
+            return False
+
+
+def delete_all_files_in_directory_beginning_with_name(path: str, file_type: str, name: str):
+    filelist = [os.path.join(path, f) for f in os.listdir(path) if (f.endswith(file_type) and f.startswith(name))]
+    for file in filelist:
+        try:
+            os.remove(file)
+        except OSError as e:
+            print(f"Can't remove file {file}: {e}")
+            return False
 
 
 def check_json_config_exists(project_path: str, config_name: str = 'cities.json') -> bool:
@@ -294,28 +317,6 @@ def overwrite_incorrect_json_file(project_path: str, config_name: str = 'cities.
     return True
 
 
-def get_city_dict(city_list, city_name) -> dict:
-    """ Function returns dictionary with given city_name from data in config file
-
-    Parameters
-    ----------
-    city_list
-        data from config file
-    city_name
-        name of the city in searched dictionary
-
-    Returns
-    -------
-    result
-        return dictionary,  empty if no 'city_name' key was found
-
-    """
-    for city in city_list:
-        if city.get('city_name') == city_name:
-            return city
-    return {}
-
-
 def get_zip_link(city_url: str, direct_link: bool):
     """ function returns download link, giver either direct link from dictionary or parses one to find correct link
 
@@ -350,7 +351,7 @@ def download_zip_from_url(cwd: str, link: str, city_name: str) -> bool:
     link
         String of the link file should be downloaded
     city_name
-        name of the associated link
+        name of the city for which link should be downloaded
 
     Returns
     -------
@@ -380,7 +381,7 @@ def create_unzipped_folder(cwd: str, city_name: str) -> bool:
     cwd
         current working directory
     city_name
-        Name of the city which directory should be created
+        Name of the city for which directory should be created
 
     Returns
     -------
@@ -402,16 +403,40 @@ def create_unzipped_folder(cwd: str, city_name: str) -> bool:
 
 
 def check_if_zip_file_exists(cwd: str, city_name: str) -> str:
+    """ Checks if zip file associated to a city name exists
+
+    Parameters
+    ----------
+    cwd: str
+        Current working directory
+    city_name: str
+        Name of the city for which check file
+
+    Returns
+    -------
+
+    """
     path_zip = cwd + '\\zip_files'
     for file in os.listdir(path_zip):
         if file.startswith(city_name) and file.endswith('.zip'):
-            print('Found file')
+            print(f'Found file {file}')
             return os.path.join(path_zip, file)
-    print('No file')
+    print(f'No {city_name}.zip file found')
     return ''
 
 
 def unzip_file(cwd: str, city_name: str):
+    """ Unzips the specified from the city name file
+
+    Parameters
+    ----------
+    cwd
+    city_name
+
+    Returns
+    -------
+
+    """
     path_unzipped = cwd + '\\zip_files\\unzipped_' + city_name
     file_path = check_if_zip_file_exists(cwd, city_name)
     if file_path != '':
@@ -427,16 +452,28 @@ def unzip_file(cwd: str, city_name: str):
         return False
 
 
-def save_txt_to_csv(cwd: str, city: dict, table_name: str):
-    path_unzipped = cwd + '\\zip_files\\unzipped_' + city['city_name']
+def save_txt_to_csv_with_city_id_and_date(cwd: str, city_dict: dict, table_name: str):
+    """ Saves txt file to csv format in different directory
+
+    Parameters
+    ----------
+    cwd
+    city_dict
+    table_name
+
+    Returns
+    -------
+
+    """
+    path_unzipped = cwd + '\\zip_files\\unzipped_' + city_dict['city_name']
     path_csv = cwd + '\\csv_files'
     filename = table_name + '.txt'
     if not os.path.exists(os.path.join(path_unzipped, filename)):
         print(f'File {filename} not found')
         return False
-    city_id = str(city['city_id'])
+    city_id = str(city_dict['city_id'])
     date = str(datetime.now(timezone.utc))
-    outfile_name = city.get('city_name') + '-' + table_name + '.csv'
+    outfile_name = city_dict.get('city_name') + '-' + table_name + '.csv'
     outfile_path = (os.path.join(path_csv, outfile_name))
 
     try:
@@ -453,5 +490,7 @@ def save_txt_to_csv(cwd: str, city: dict, table_name: str):
     except Exception as e:
         print(f"Error has occurred when writing to {table_name} file: {e}")
         return False
+
+
 
 

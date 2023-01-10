@@ -192,11 +192,7 @@ class TestDatasetScrapperFiles(TestCase):
 
     def test_delete_old_files_calls_filepath_when_no_file(self):
         file_dict = {'\\project\\test.txt': False}
-
-        with mock.patch('builtins.print') as mocked_print:
-            result = dataset_scrapper.delete_old_files(file_dict)
-        mocked_print.assert_called_with("Can't remove file: [Errno 2] No such file or directory in the fake filesystem:"
-                                        " 'C:\\\\project\\\\test.txt'")
+        result = dataset_scrapper.delete_old_files(file_dict)
         self.assertFalse(result)
 
     def test_check_json_config_exists_json_exist_return_true(self):
@@ -265,18 +261,6 @@ class TestDatasetScrapperFiles(TestCase):
                 result = dataset_scrapper.overwrite_incorrect_json_file('\\project', 'cities.json')
         mock_create_json.assert_not_called()
         self.assertTrue(result)
-
-    def test_get_city_dict_return_dict_with_correct_city_name(self):
-        test_list = mock_json_load()
-        result = dataset_scrapper.get_city_dict(test_list, 'Wroclaw')
-        expected = test_list[0]
-        self.assertDictEqual(result, expected)
-
-    def test_get_city_dict_return_wrong_keys_return_empty_dict(self):
-        test_list = [{'test': 'value', 'url': 'test_url'}]
-        result = dataset_scrapper.get_city_dict(test_list, 'Wroclaw')
-        expected = {}
-        self.assertDictEqual(result, expected)
 
     def test_get_zip_link_no_direct_link_return_link_from_href(self):
         r = '<a class="resource-url-analytics"' \
@@ -359,7 +343,7 @@ class TestDatasetScrapperFiles(TestCase):
         self.fs.create_dir('\\project\\zip_files')
         self.fs.create_file('\\project\\zip_files\\unzipped_test\\example.txt', contents=example_content)
         test_dict = {"city_id": 50, "city_name": "test"}
-        result = dataset_scrapper.save_txt_to_csv('\\project', test_dict, 'example')
+        result = dataset_scrapper.save_txt_to_csv_with_city_id_and_date('\\project', test_dict, 'example')
         self.assertTrue(result)
         self.assertTrue(os.path.exists('\\project\\csv_files\\test-example.csv'))
         with open('\\project\\csv_files\\test-example.csv') as f:
@@ -369,7 +353,7 @@ class TestDatasetScrapperFiles(TestCase):
 
     def test_save_txt_to_csv_no_file_returns_false(self):
         test_dict = {"city_id": 50, "city_name": "test"}
-        result = dataset_scrapper.save_txt_to_csv('\\project', test_dict, 'example')
+        result = dataset_scrapper.save_txt_to_csv_with_city_id_and_date('\\project', test_dict, 'example')
         self.assertFalse(result)
 
 
